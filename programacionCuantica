@@ -1,0 +1,47 @@
+from qiskit import QuantumCircuit, Aer, execute
+from qiskit.visualization import plot_histogram
+import math
+
+# Definir el tamaño de la lista y el número que se desea buscar
+n = 4
+target = 6
+
+# Definir el número de iteraciones de Grover
+num_iterations = int(math.sqrt(n))
+
+# Inicializar el circuito cuántico con n qubits y un qubit adicional para el oráculo
+qc = QuantumCircuit(n+1, n)
+
+# Aplicar la compuerta Hadamard a todos los qubits
+qc.h(range(n+1))
+
+# Aplicar el oráculo que marca el estado objetivo
+for i in range(num_iterations):
+    for j in range(n):
+        qc.x(j)
+    qc.h(n)
+    qc.mct(list(range(n)), n)
+    qc.h(n)
+    for j in range(n):
+        qc.x(j)
+
+# Aplicar la reflexión alrededor de la media
+qc.h(range(n))
+qc.x(range(n))
+qc.h(n)
+qc.mct(list(range(n)), n)
+qc.h(n)
+qc.x(range(n))
+qc.h(range(n))
+
+# Medir los qubits
+qc.measure(range(n), range(n))
+
+# Ejecutar el circuito en un simulador
+backend = Aer.get_backend('qasm_simulator')
+job = execute(qc, backend, shots=1024)
+result = job.result()
+counts = result.get_counts()
+
+# Imprimir los resultados de la simulación
+print(counts)
